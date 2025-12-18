@@ -4,14 +4,14 @@ import com.example.autotest_backend.model.Question;
 import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.model.UserQuestion;
 import com.example.autotest_backend.repository.UserQuestionRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Transactional
 public class UserQuestionServiceImpl implements UserQuestionService {
 
