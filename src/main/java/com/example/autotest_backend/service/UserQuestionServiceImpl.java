@@ -5,6 +5,7 @@ import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.model.UserQuestion;
 import com.example.autotest_backend.repository.UserQuestionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,17 +20,17 @@ public class UserQuestionServiceImpl implements UserQuestionService {
 
     @Override
     public UserQuestion markAsCompleted(User user, Question question) {
+        try {
+            UserQuestion uq = UserQuestion.builder()
+                    .user(user)
+                    .question(question)
+                    .build();
 
-        if (userQuestionRepository.existsByUserAndQuestion(user, question)) {
+            return userQuestionRepository.save(uq);
+
+        } catch (DataIntegrityViolationException ex) {
             throw new IllegalStateException("Question already completed by user");
         }
-
-        UserQuestion userQuestion = UserQuestion.builder()
-                .user(user)
-                .question(question)
-                .build();
-
-        return userQuestionRepository.save(userQuestion);
     }
 
     @Override
