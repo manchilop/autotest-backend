@@ -29,6 +29,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }
