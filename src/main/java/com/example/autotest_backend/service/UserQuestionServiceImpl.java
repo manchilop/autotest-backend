@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 @Transactional
-public class UserQuestionServiceImpl implements UserQuestionService{
+public class UserQuestionServiceImpl implements UserQuestionService {
 
     private final UserQuestionRepository userQuestionRepository;
 
