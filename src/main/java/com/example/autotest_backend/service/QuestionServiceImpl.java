@@ -24,8 +24,14 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Question> getApprovedQuestions() {
-        return questionRepository.findByStatus(QuestionStatus.APPROVED);
+    public List<Question> getAllQuestions() {
+        return questionRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Question> getQuestionsByStatus(QuestionStatus status) {
+        return questionRepository.findByStatus(status);
     }
 
     @Override
