@@ -4,6 +4,7 @@ import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.model.UserRole;
 import com.example.autotest_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
@@ -35,13 +37,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUserIfNotExists(String email) {
-        return userRepository.findByEmail(email)
-                .orElseGet(() -> userRepository.save(
-                        User.builder()
-                                .email(email)
-                                .role(UserRole.STUDENT) //default
-                                .build()
-                ));
+    public User registerUser(String email, String rawPassword, UserRole role) {
+        User user = User.builder()
+                .email(email)
+                .password(passwordEncoder.encode(rawPassword))
+                .role(role)
+                .build();
+        return userRepository.save(user);
     }
 }
