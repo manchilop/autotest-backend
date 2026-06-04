@@ -1,6 +1,7 @@
 package com.example.autotest_backend.service;
 
 import com.example.autotest_backend.model.User;
+import com.example.autotest_backend.model.UserRole;
 
 import java.util.Optional;
 
@@ -12,5 +13,5 @@ public interface UserService {
 
     boolean existsByEmail(String email);
 
-    User createUserIfNotExists(String email);
+    User registerUser(String email, String rawPassword, UserRole role);
 }
