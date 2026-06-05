@@ -1,9 +1,9 @@
 import { View, Text } from "react-native";
 
-export default function LibraryScreen() {
+export default function ReviewsScreen() {
   return (
     <View>
-      <Text>Library Screen</Text>
+      <Text>Pending Reviews</Text>
     </View>
   );
 }
