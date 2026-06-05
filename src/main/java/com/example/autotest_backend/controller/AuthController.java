@@ -2,6 +2,7 @@ package com.example.autotest_backend.controller;
 
 import com.example.autotest_backend.dto.AuthRequest;
 import com.example.autotest_backend.dto.AuthResponse;
+import com.example.autotest_backend.dto.UserDTO;
 import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.model.UserRole;
 import com.example.autotest_backend.security.JwtUtil;
@@ -32,7 +33,14 @@ public class AuthController {
             authManager.authenticate(new UsernamePasswordAuthenticationToken(r.getEmail(), r.getPassword()));
             User u = userService.getUserByEmail(r.getEmail()).orElseThrow();
             String token = jwtUtil.generateToken(u.getEmail(), u.getRole().name());
-            return ResponseEntity.ok(new AuthResponse(token, jwtUtil.getExpirationSeconds()));
+            
+            UserDTO userDto = UserDTO.builder()
+                    .id(u.getId())
+                    .email(u.getEmail())
+                    .role(u.getRole().name())
+                    .build();
+
+            return ResponseEntity.ok(new AuthResponse(token, jwtUtil.getExpirationSeconds(), userDto));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body("Credenciales inválidas");
         }
