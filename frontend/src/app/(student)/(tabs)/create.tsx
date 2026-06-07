@@ -6,61 +6,82 @@ import {
   StyleSheet,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 
-type Choice = {
-  text: string;
-  isCorrect: boolean;
-};
+import { createQuestion } from "../../../services/question.service";
+import { Choice, CreateQuestionRequest } from "../../../types/question";
 
 export default function Create() {
   const [question, setQuestion] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [choices, setChoices] = useState<Choice[]>([
-    { text: "", isCorrect: false },
-    { text: "", isCorrect: false },
-    { text: "", isCorrect: false },
-    { text: "", isCorrect: false },
+    { choiceText: "", correct: false },
+    { choiceText: "", correct: false },
+    { choiceText: "", correct: false },
+    { choiceText: "", correct: false },
   ]);
 
   const setChoiceText = (index: number, text: string) => {
     const updated = [...choices];
-    updated[index].text = text;
+    updated[index].choiceText = text;
     setChoices(updated);
   };
 
   const setCorrect = (index: number) => {
     const updated = choices.map((c, i) => ({
       ...c,
-      isCorrect: i === index,
+      correct: i === index,
     }));
     setChoices(updated);
   };
 
-  const handleSubmit = () => {
-    if (!question.trim()) {
-      Alert.alert("Error", "Question is required");
-      return;
+  const resetForm = () => {
+    setQuestion("");
+    setChoices([
+      { choiceText: "", correct: false },
+      { choiceText: "", correct: false },
+      { choiceText: "", correct: false },
+      { choiceText: "", correct: false },
+    ]);
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+
+      if (!question.trim()) {
+        Alert.alert("Error", "Question is required");
+        return;
+      }
+
+      if (choices.some((c) => !c.choiceText.trim())) {
+        Alert.alert("Error", "All options are required");
+        return;
+      }
+
+      if (!choices.some((c) => c.correct)) {
+        Alert.alert("Error", "Select the correct answer");
+        return;
+      }
+
+      const payload: CreateQuestionRequest = {
+        questionText: question,
+        choices,
+      };
+
+      await createQuestion(payload);
+
+      Alert.alert("Success", "Question created successfully");
+
+      resetForm();
+    } catch (error) {
+      console.log("Create question error:", error);
+      Alert.alert("Error", "Failed to create question");
+    } finally {
+      setLoading(false);
     }
-
-    if (choices.some((c) => !c.text.trim())) {
-      Alert.alert("Error", "All options are required");
-      return;
-    }
-
-    if (!choices.some((c) => c.isCorrect)) {
-      Alert.alert("Error", "Select the correct answer");
-      return;
-    }
-
-    const payload = {
-      text: question,
-      choices,
-    };
-
-    console.log("CREATE QUESTION PAYLOAD:", payload);
-
-    Alert.alert("Success", "Question ready to send to backend");
   };
 
   return (
@@ -80,7 +101,7 @@ export default function Create() {
         <View key={index} style={styles.choiceRow}>
           <TextInput
             placeholder={`Option ${index + 1}`}
-            value={choice.text}
+            value={choice.choiceText}
             onChangeText={(text) => setChoiceText(index, text)}
             style={styles.choiceInput}
           />
@@ -88,13 +109,11 @@ export default function Create() {
           <Pressable
             style={[
               styles.radio,
-              choice.isCorrect && styles.radioSelected,
+              choice.correct && styles.radioSelected,
             ]}
             onPress={() => setCorrect(index)}
           >
-            {choice.isCorrect && (
-              <View style={styles.radioDot} />
-            )}
+            {choice.correct && <View style={styles.radioDot} />}
           </Pressable>
         </View>
       ))}
@@ -103,8 +122,21 @@ export default function Create() {
         Tap circle to mark correct answer
       </Text>
 
-      <Pressable style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit Question</Text>
+      <Pressable
+        style={[
+          styles.button,
+          loading && { opacity: 0.6 },
+        ]}
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>
+            Submit Question
+          </Text>
+        )}
       </Pressable>
     </View>
   );

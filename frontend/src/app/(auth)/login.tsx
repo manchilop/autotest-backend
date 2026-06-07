@@ -18,7 +18,7 @@ export default function LoginScreen() {
       setError("");
 
       // 🔌 call backend
-      const response = await loginService(email, password);
+      const response = await loginService({ email, password });
 
       // 💾 save session
       await login(response);
