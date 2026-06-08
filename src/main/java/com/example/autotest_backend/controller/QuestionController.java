@@ -1,14 +1,19 @@
 package com.example.autotest_backend.controller;
 
+import com.example.autotest_backend.dto.question.AnswerRequest;
+import com.example.autotest_backend.dto.question.AnswerResponse;
 import com.example.autotest_backend.dto.question.CreateQuestionRequest;
 import com.example.autotest_backend.dto.question.QuestionResponse;
 import com.example.autotest_backend.mapper.QuestionMapper;
 import com.example.autotest_backend.model.Question;
 import com.example.autotest_backend.model.QuestionStatus;
+import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.service.QuestionService;
+import com.example.autotest_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +26,8 @@ public class QuestionController {
 
     private final QuestionService questionService;
     private final QuestionMapper questionMapper;
+    private final UserService userService;
 
-    //STUDENT
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public QuestionResponse createQuestion(
@@ -52,6 +57,24 @@ public class QuestionController {
         return questions.stream()
                 .map(questionMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/next")
+    public QuestionResponse getNextQuestion(Authentication authentication) {
+        User user = userService.getUserByEmail(authentication.getName()).orElseThrow();
+        return questionMapper.toResponse(questionService.getNextQuestion(user.getId()));
+    }
+
+    @PostMapping("/{id}/answer")
+    public AnswerResponse answerQuestion(
+            @PathVariable Long id,
+            @RequestBody @Valid
+            AnswerRequest request,
+            Authentication authentication
+    ) {
+        User user = userService.getUserByEmail(authentication.getName()).orElseThrow();
+        boolean correct = questionService.answerQuestion(id, request.getChoiceId(), user);
+        return new AnswerResponse(correct);
     }
 
     @PatchMapping("/{id}/approve")
