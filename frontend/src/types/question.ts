@@ -17,7 +17,6 @@ export interface CreateQuestionRequest {
 export interface ChoiceResponse {
   id: number;
   choiceText: string;
-  correct: boolean;
 }
 
 export interface QuestionResponse {
