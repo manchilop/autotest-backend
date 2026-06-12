@@ -31,3 +31,10 @@ export const answerQuestion = async (
   );
   return response.data;
 };
+
+export const getCompletedQuestions = async (token: string) => {
+  const response = await api.get("/api/user-questions/completed", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};

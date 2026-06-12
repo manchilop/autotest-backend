@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/questions/next").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.POST, "/api/questions/*/answer").hasRole("STUDENT")
                         .requestMatchers(HttpMethod.POST, "/api/questions").hasRole("STUDENT")
+                        .requestMatchers(HttpMethod.GET, "/api/user-questions/completed").hasRole("STUDENT")
                         .requestMatchers("/api/questions/*/approve", "/api/questions/*/reject").hasRole("TEACHER")
                         .requestMatchers(HttpMethod.GET, "/api/questions").authenticated()
                         .anyRequest().authenticated()

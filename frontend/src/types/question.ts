@@ -24,3 +24,15 @@ export interface QuestionResponse {
   questionText: string;
   choices: ChoiceResponse[];
 }
+
+export interface LibraryQuestionResponse {
+  id: number;
+  questionText: string;
+  choices: LibraryChoiceResponse[];
+}
+
+export interface LibraryChoiceResponse {
+  id: number;
+  choiceText: string;
+  correct: boolean;
+}
