@@ -60,10 +60,9 @@ public class QuestionServiceImpl implements QuestionService {
                 .map(Choice::isCorrect)
                 .orElseThrow(() -> new IllegalArgumentException("Choice not found"));
 
-        try {
+        // Only mark as completed if the user hasn't already answered this question
+        if (!userQuestionServiceImpl.hasUserCompletedQuestion(user, question)) {
             userQuestionServiceImpl.markAsCompleted(user, question);
-        } catch (IllegalStateException e) {
-            // ya respondida antes, ignoramos
         }
 
         return correct;
