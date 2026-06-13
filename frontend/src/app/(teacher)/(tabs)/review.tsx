@@ -13,10 +13,10 @@ import {
   rejectQuestion,
 } from "../../../services/question.service";
 
-import { LibraryQuestionResponse } from "../../../types/question";
+import { QuestionResponse } from "../../../types/question";
 
 export default function Review() {
-  const [questions, setQuestions] = useState<LibraryQuestionResponse[]>([]);
+  const [questions, setQuestions] = useState<QuestionResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
