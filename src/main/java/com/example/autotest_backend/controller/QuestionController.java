@@ -1,9 +1,6 @@
 package com.example.autotest_backend.controller;
 
-import com.example.autotest_backend.dto.question.AnswerRequest;
-import com.example.autotest_backend.dto.question.AnswerResponse;
-import com.example.autotest_backend.dto.question.CreateQuestionRequest;
-import com.example.autotest_backend.dto.question.QuestionResponse;
+import com.example.autotest_backend.dto.question.*;
 import com.example.autotest_backend.mapper.QuestionMapper;
 import com.example.autotest_backend.model.Question;
 import com.example.autotest_backend.model.QuestionStatus;
@@ -60,9 +57,9 @@ public class QuestionController {
     }
 
     @GetMapping("/next")
-    public QuestionResponse getNextQuestion(Authentication authentication) {
+    public PracticeQuestionResponse getNextQuestion(Authentication authentication) {
         User user = userService.getUserByEmail(authentication.getName()).orElseThrow();
-        return questionMapper.toResponse(questionService.getNextQuestion(user.getId()));
+        return questionMapper.toPracticeResponse(questionService.getNextQuestion(user.getId()));
     }
 
     @PostMapping("/{id}/answer")

@@ -9,4 +9,5 @@ public class ChoiceResponse {
 
     Long id;
     String choiceText;
+    boolean correct;
 }

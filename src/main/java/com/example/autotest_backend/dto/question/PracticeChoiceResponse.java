@@ -5,8 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class LibraryChoiceResponse {
+public class PracticeChoiceResponse {
     Long id;
     String choiceText;
-    boolean correct;
 }
