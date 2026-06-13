@@ -1,71 +1,45 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  FlatList,
-} from "react-native";
-
-type Question = {
-  id: number;
-  text: string;
-  choices: {
-    text: string;
-    isCorrect: boolean;
-  }[];
-};
-
-const mockData: Question[] = [
-  {
-    id: 1,
-    text: "What is polymorphism?",
-    choices: [
-      { text: "Option A", isCorrect: false },
-      { text: "Option B", isCorrect: false },
-      { text: "Option C", isCorrect: true },
-      { text: "Option D", isCorrect: false },
-    ],
-  },
-  {
-    id: 2,
-    text: "What is HTTP?",
-    choices: [
-      { text: "Protocol", isCorrect: true },
-      { text: "Language", isCorrect: false },
-      { text: "Database", isCorrect: false },
-      { text: "OS", isCorrect: false },
-    ],
-  },
-];
+import { useState, useEffect, useContext } from "react";
+import { View, Text, StyleSheet, Pressable, FlatList, ActivityIndicator } from "react-native";
+import { AuthContext } from "../../../store/AuthContext";
+import { getCompletedQuestions } from "../../../services/question.service";
+import { LibraryQuestionResponse } from "../../../types/question";
 
 export default function Library() {
+  const { authState } = useContext(AuthContext);
+  const [questions, setQuestions] = useState<LibraryQuestionResponse[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchCompleted();
+  }, []);
+
+  const fetchCompleted = async () => {
+    try {
+      setLoading(true);
+      const data = await getCompletedQuestions(authState.token!);
+      setQuestions(data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggle = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const renderItem = ({ item }: { item: Question }) => {
+  const renderItem = ({ item }: { item: LibraryQuestionResponse }) => {
     const expanded = expandedId === item.id;
-
     return (
       <View style={styles.card}>
         <Pressable onPress={() => toggle(item.id)}>
-          <Text style={styles.title}>{item.text}</Text>
+          <Text style={styles.title}>{item.questionText}</Text>
         </Pressable>
-
         {expanded && (
           <View style={styles.choices}>
-            {item.choices.map((c, i) => (
-              <Text
-                key={i}
-                style={[
-                  styles.choice,
-                  c.isCorrect && styles.correct,
-                ]}
-              >
-                {c.text} {c.isCorrect ? "✔" : ""}
+            {item.choices.map((c) => (
+              <Text key={c.id} style={[styles.choice, c.correct && styles.correct]}>
+                {c.choiceText} {c.correct ? "✔" : ""}
               </Text>
             ))}
           </View>
@@ -74,12 +48,13 @@ export default function Library() {
     );
   };
 
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Library</Text>
-
       <FlatList
-        data={mockData}
+        data={questions}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
       />

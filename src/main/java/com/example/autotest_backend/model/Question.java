@@ -31,6 +31,7 @@ public class Question {
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @Setter(AccessLevel.NONE)
+    @Builder.Default
     private List<Choice> choices = new ArrayList<>();
 
     public List<Choice> getChoices() {
