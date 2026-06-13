@@ -38,3 +38,26 @@ export const getCompletedQuestions = async (token: string) => {
   });
   return response.data;
 };
+
+// Teacher
+
+export const getPendingQuestions = async () => {
+  const response = await api.get(
+    "/api/questions?status=PENDING"
+  );
+  return response.data;
+};
+
+export const approveQuestion = async (id: number) => {
+  const response = await api.patch(
+    `/api/questions/${id}/approve`
+  );
+  return response.data;
+};
+
+export const rejectQuestion = async (id: number) => {
+  const response = await api.patch(
+    `/api/questions/${id}/reject`
+  );
+  return response.data;
+};
