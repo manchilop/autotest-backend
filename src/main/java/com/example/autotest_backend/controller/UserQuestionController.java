@@ -1,6 +1,6 @@
 package com.example.autotest_backend.controller;
 
-import com.example.autotest_backend.dto.question.LibraryQuestionResponse;
+import com.example.autotest_backend.dto.question.QuestionResponse;
 import com.example.autotest_backend.mapper.QuestionMapper;
 import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.service.UserQuestionService;
@@ -24,11 +24,11 @@ public class UserQuestionController {
     private final QuestionMapper questionMapper;
 
     @GetMapping("/completed")
-    public List<LibraryQuestionResponse> getCompletedQuestions(Authentication authentication) {
+    public List<QuestionResponse> getCompletedQuestions(Authentication authentication) {
         User user = userService.getUserByEmail(authentication.getName()).orElseThrow();
         return userQuestionService.getCompletedQuestionsByUser(user)
                                   .stream()
-                                  .map(uq -> questionMapper.toLibraryResponse(uq.getQuestion()))
+                                  .map(uq -> questionMapper.toResponse(uq.getQuestion()))
                                   .collect(Collectors.toList());
     }
 }

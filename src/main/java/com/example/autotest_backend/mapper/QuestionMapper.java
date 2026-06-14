@@ -32,11 +32,12 @@ public interface QuestionMapper {
 
     QuestionResponse toResponse(Question question);
 
+    @Mapping(target = "correct", source = "correct")
     ChoiceResponse toResponse(Choice choice);
 
     List<ChoiceResponse> toChoiceResponses(List<Choice> choices);
 
-    LibraryQuestionResponse toLibraryResponse(Question question);
+    PracticeQuestionResponse toPracticeResponse(Question question);
 
-    LibraryChoiceResponse toLibraryChoiceResponse(Choice choice);
+    PracticeChoiceResponse toPracticeChoiceResponse(Choice choice);
 }

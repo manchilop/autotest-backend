@@ -8,13 +8,13 @@ import {
 } from "react-native";
 import { AuthContext } from "../../../store/AuthContext";
 import { getNextQuestion, answerQuestion } from "../../../services/question.service";
-import { QuestionResponse } from "../../../types/question";
+import { PracticeQuestionResponse } from "../../../types/question";
 
 export default function PracticeScreen() {
   const { authState } = useContext(AuthContext);
   const token = authState.token!;
 
-  const [question, setQuestion] = useState<QuestionResponse | null>(null);
+  const [question, setQuestion] = useState<PracticeQuestionResponse | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [correct, setCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);

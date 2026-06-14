@@ -7,8 +7,8 @@ import java.util.List;
 
 @Getter
 @Builder
-public class LibraryQuestionResponse {
+public class PracticeQuestionResponse {
     Long id;
     String questionText;
-    List<LibraryChoiceResponse> choices;
+    List<PracticeChoiceResponse> choices;
 }

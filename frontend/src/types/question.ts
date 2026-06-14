@@ -17,6 +17,7 @@ export interface CreateQuestionRequest {
 export interface ChoiceResponse {
   id: number;
   choiceText: string;
+  correct: boolean;
 }
 
 export interface QuestionResponse {
@@ -25,14 +26,13 @@ export interface QuestionResponse {
   choices: ChoiceResponse[];
 }
 
-export interface LibraryQuestionResponse {
+export interface PracticeQuestionResponse {
   id: number;
   questionText: string;
-  choices: LibraryChoiceResponse[];
+  choices: PracticeChoiceResponse[];
 }
 
-export interface LibraryChoiceResponse {
+export interface PracticeChoiceResponse {
   id: number;
   choiceText: string;
-  correct: boolean;
 }

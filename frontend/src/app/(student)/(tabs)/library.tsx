@@ -1,12 +1,11 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Pressable, FlatList, ActivityIndicator } from "react-native";
-import { AuthContext } from "../../../store/AuthContext";
 import { getCompletedQuestions } from "../../../services/question.service";
-import { LibraryQuestionResponse } from "../../../types/question";
+import { QuestionResponse } from "../../../types/question";
 
 export default function Library() {
-  const { authState } = useContext(AuthContext);
-  const [questions, setQuestions] = useState<LibraryQuestionResponse[]>([]);
+
+  const [questions, setQuestions] = useState<QuestionResponse[]>([]);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +16,7 @@ export default function Library() {
   const fetchCompleted = async () => {
     try {
       setLoading(true);
-      const data = await getCompletedQuestions(authState.token!);
+      const data = await getCompletedQuestions();
       setQuestions(data);
     } finally {
       setLoading(false);
@@ -28,7 +27,7 @@ export default function Library() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const renderItem = ({ item }: { item: LibraryQuestionResponse }) => {
+  const renderItem = ({ item }: { item: QuestionResponse }) => {
     const expanded = expandedId === item.id;
     return (
       <View style={styles.card}>
