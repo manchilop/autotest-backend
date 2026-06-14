@@ -12,41 +12,33 @@ export const createQuestion = async (
   return response.data;
 };
 
-export const getNextQuestion = async (token: string) => {
-  const response = await api.get("/api/questions/next", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getQuestionsByStatus = async (status: string) => {
+  const response = await api.get(`/api/questions?status=${status}`);
+  return response.data;
+};
+
+export const getNextQuestion = async () => {
+  const response = await api.get("/api/questions/next");
   return response.data;
 };
 
 export const answerQuestion = async (
   questionId: number,
-  choiceId: number,
-  token: string
+  choiceId: number
 ) => {
   const response = await api.post(
     `/api/questions/${questionId}/answer`,
-    { choiceId },
-    { headers: { Authorization: `Bearer ${token}` } }
+    { choiceId }
   );
   return response.data;
 };
 
-export const getCompletedQuestions = async (token: string) => {
-  const response = await api.get("/api/user-questions/completed", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getCompletedQuestions = async () => {
+  const response = await api.get("/api/user-questions/completed");
   return response.data;
 };
 
 // Teacher
-
-export const getPendingQuestions = async () => {
-  const response = await api.get(
-    "/api/questions?status=PENDING"
-  );
-  return response.data;
-};
 
 export const approveQuestion = async (id: number) => {
   const response = await api.patch(

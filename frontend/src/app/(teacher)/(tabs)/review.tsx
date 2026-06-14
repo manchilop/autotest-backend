@@ -8,7 +8,7 @@ import {
 } from "react-native";
 
 import {
-  getPendingQuestions,
+  getQuestionsByStatus,
   approveQuestion,
   rejectQuestion,
 } from "../../../services/question.service";
@@ -25,7 +25,7 @@ export default function Review() {
 
   const loadQuestions = async () => {
     try {
-      const data = await getPendingQuestions();
+      const data = await getQuestionsByStatus("PENDING");
       setQuestions(data);
     } catch (error) {
       console.log(error);

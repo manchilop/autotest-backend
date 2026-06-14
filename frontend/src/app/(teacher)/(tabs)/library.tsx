@@ -1,61 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
+import { getQuestionsByStatus } from "../../../services/question.service";
+import { QuestionResponse } from "../../../types/question";
 
 export default function Library() {
+
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [approved, setApproved] = useState<QuestionResponse[]>([]);
+  const [rejected, setRejected] = useState<QuestionResponse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const approved = [
-    {
-      id: 1,
-      questionText: "What is Java?",
-      choices: [
-        { choiceText: "Language", isCorrect: true },
-        { choiceText: "Database", isCorrect: false },
-      ],
-    },
-  ];
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
 
-  const rejected = [
-    {
-      id: 2,
-      questionText: "2 + 2 = ?",
-      choices: [
-        { choiceText: "5", isCorrect: true },
-        { choiceText: "4", isCorrect: false },
-      ],
-    },
-  ];
+  const fetchQuestions = async () => {
+    try {
+      const [approvedData, rejectedData] = await Promise.all([
+        getQuestionsByStatus("APPROVED"),
+        getQuestionsByStatus("REJECTED"),
+      ]);
+      setApproved(approvedData);
+      setRejected(rejectedData);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const renderQuestion = (question: any) => (
+  const renderQuestion = (question: QuestionResponse) => (
     <Pressable
       key={question.id}
       style={styles.card}
       onPress={() =>
-        setExpandedId(
-          expandedId === question.id ? null : question.id
-        )
+        setExpandedId(expandedId === question.id ? null : question.id)
       }
     >
-      <Text style={styles.question}>
-        {question.questionText}
-      </Text>
+      <Text style={styles.question}>{question.questionText}</Text>
 
       {expandedId === question.id && (
         <View style={styles.choices}>
-          {question.choices.map((choice: any, index: number) => (
+          {question.choices.map((choice) => (
             <Text
-              key={index}
-              style={
-                choice.isCorrect
-                  ? styles.correctChoice
-                  : styles.choice
-              }
+              key={choice.id}
+              style={choice.correct ? styles.correctChoice : styles.choice}
             >
               {choice.choiceText}
             </Text>
@@ -65,14 +61,16 @@ export default function Library() {
     </Pressable>
   );
 
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Approved Questions</Text>
-
+      {approved.length === 0 && <Text style={styles.empty}>No approved questions</Text>}
       {approved.map(renderQuestion)}
 
       <Text style={styles.title}>Rejected Questions</Text>
-
+      {rejected.length === 0 && <Text style={styles.empty}>No rejected questions</Text>}
       {rejected.map(renderQuestion)}
     </ScrollView>
   );
@@ -109,5 +107,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     color: "green",
     fontWeight: "700",
+  },
+  empty: {
+    color: "#9CA3AF",
+    marginBottom: 10,
   },
 });
