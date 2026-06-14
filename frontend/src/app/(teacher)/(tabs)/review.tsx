@@ -6,13 +6,11 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-
 import {
   getQuestionsByStatus,
   approveQuestion,
   rejectQuestion,
 } from "../../../services/question.service";
-
 import { QuestionResponse } from "../../../types/question";
 
 export default function Review() {
@@ -36,13 +34,10 @@ export default function Review() {
 
   const currentQuestion = questions[0];
 
-  const removeCurrentQuestion = () => {
-    setQuestions((prev) => prev.slice(1));
-  };
+  const removeCurrentQuestion = () => setQuestions((prev) => prev.slice(1));
 
   const handleApprove = async () => {
     if (!currentQuestion) return;
-
     try {
       await approveQuestion(currentQuestion.id);
       removeCurrentQuestion();
@@ -53,7 +48,6 @@ export default function Review() {
 
   const handleReject = async () => {
     if (!currentQuestion) return;
-
     try {
       await rejectQuestion(currentQuestion.id);
       removeCurrentQuestion();
@@ -64,103 +58,55 @@ export default function Review() {
 
   const handleSkip = () => {
     if (!currentQuestion) return;
-
-    setQuestions((prev) => [
-      ...prev.slice(1),
-      prev[0],
-    ]);
+    setQuestions((prev) => [...prev.slice(1), prev[0]]);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" />;
 
   if (!currentQuestion) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyTitle}>
-          No pending questions
-        </Text>
-
-        <Text style={styles.emptySubtitle}>
-          All questions have been reviewed.
-        </Text>
+        <Text style={styles.emptyTitle}>All caught up! 🎉</Text>
+        <Text style={styles.emptySubtitle}>No pending questions to review.</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Review Questions
-      </Text>
+      <Text style={styles.pageTitle}>Review questions</Text>
+      <Text style={styles.pageSub}>Approve or reject student submissions</Text>
+
+      <View style={styles.counter}>
+        <Text style={styles.counterText}>🕐 {questions.length} pending</Text>
+      </View>
 
       <View style={styles.card}>
-        <Text style={styles.question}>
-          {currentQuestion.questionText}
-        </Text>
-
+        <Text style={styles.question}>{currentQuestion.questionText}</Text>
         <View style={styles.choices}>
-          {currentQuestion.choices.map(
-            (choice, index) => (
-              <View
-                key={index}
-                style={styles.choice}
-              >
-                <Text
-                  style={
-                    choice.correct
-                      ? styles.correctChoice
-                      : styles.choiceText
-                  }
-                >
-                  {choice.choiceText}
-                </Text>
-              </View>
-            )
-          )}
+          {currentQuestion.choices.map((choice) => (
+            <View
+              key={choice.id}
+              style={[styles.choice, choice.correct && styles.choiceCorrect]}
+            >
+              {choice.correct && <Text style={styles.check}>✓</Text>}
+              <Text style={[styles.choiceText, choice.correct && styles.choiceTextCorrect]}>
+                {choice.choiceText}
+              </Text>
+            </View>
+          ))}
         </View>
       </View>
 
       <View style={styles.actions}>
-        <Pressable
-          style={[
-            styles.button,
-            styles.rejectButton,
-          ]}
-          onPress={handleReject}
-        >
-          <Text style={styles.buttonText}>
-            Reject
-          </Text>
+        <Pressable style={[styles.button, styles.rejectButton]} onPress={handleReject}>
+          <Text style={styles.rejectText}>✕ Reject</Text>
         </Pressable>
-
-        <Pressable
-          style={[
-            styles.button,
-            styles.skipButton,
-          ]}
-          onPress={handleSkip}
-        >
-          <Text style={styles.buttonText}>
-            Skip
-          </Text>
+        <Pressable style={[styles.button, styles.skipButton]} onPress={handleSkip}>
+          <Text style={styles.skipText}>→ Skip</Text>
         </Pressable>
-
-        <Pressable
-          style={[
-            styles.button,
-            styles.approveButton,
-          ]}
-          onPress={handleApprove}
-        >
-          <Text style={styles.buttonText}>
-            Approve
-          </Text>
+        <Pressable style={[styles.button, styles.approveButton]} onPress={handleApprove}>
+          <Text style={styles.approveText}>✓ Approve</Text>
         </Pressable>
       </View>
     </View>
@@ -168,94 +114,28 @@ export default function Review() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-    padding: 20,
-  },
-
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 20,
-  },
-
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-  },
-
-  question: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 20,
-  },
-
-  choices: {
-    gap: 10,
-  },
-
-  choice: {
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 8,
-  },
-
-  choiceText: {
-    fontSize: 16,
-  },
-
-  correctChoice: {
-    fontSize: 16,
-    color: "#16A34A",
-    fontWeight: "700",
-  },
-
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 25,
-    gap: 10,
-  },
-
-  button: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  rejectButton: {
-    backgroundColor: "#DC2626",
-  },
-
-  skipButton: {
-    backgroundColor: "#6B7280",
-  },
-
-  approveButton: {
-    backgroundColor: "#16A34A",
-  },
-
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
-  emptyTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-  },
-
-  emptySubtitle: {
-    marginTop: 10,
-    color: "#6B7280",
-  },
+  container: { flex: 1, backgroundColor: "#F8FAFC", padding: 20 },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  pageTitle: { fontSize: 22, fontWeight: "700", color: "#111827", marginTop: 20, marginBottom: 2 },
+  pageSub: { fontSize: 13, color: "#6B7280", marginBottom: 16 },
+  counter: { alignSelf: "flex-start", backgroundColor: "#FAEEDA", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 20 },
+  counterText: { fontSize: 13, color: "#633806", fontWeight: "600" },
+  card: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 20 },
+  question: { fontSize: 18, fontWeight: "600", color: "#111827", marginBottom: 20, lineHeight: 26 },
+  choices: { gap: 8 },
+  choice: { backgroundColor: "#F3F4F6", borderRadius: 8, padding: 12, flexDirection: "row", alignItems: "center", gap: 10 },
+  choiceCorrect: { backgroundColor: "#EAF3DE" },
+  choiceText: { fontSize: 14, color: "#374151", flex: 1 },
+  choiceTextCorrect: { color: "#3B6D11", fontWeight: "600" },
+  check: { fontSize: 14, color: "#639922" },
+  actions: { flexDirection: "row", gap: 8, marginTop: 20 },
+  button: { flex: 1, padding: 14, borderRadius: 10, alignItems: "center" },
+  rejectButton: { backgroundColor: "#DC2626" },
+  rejectText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  skipButton: { backgroundColor: "#F3F4F6" },
+  skipText: { color: "#6B7280", fontWeight: "600", fontSize: 15 },
+  approveButton: { backgroundColor: "#16A34A" },
+  approveText: { color: "#fff", fontWeight: "600", fontSize: 15 },
+  emptyTitle: { fontSize: 22, fontWeight: "700", color: "#111827" },
+  emptySubtitle: { marginTop: 8, color: "#6B7280", fontSize: 14 },
 });

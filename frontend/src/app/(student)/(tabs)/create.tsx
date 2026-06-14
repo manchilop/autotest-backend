@@ -7,15 +7,16 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
-
 import { createQuestion } from "../../../services/question.service";
 import { Choice, CreateQuestionRequest } from "../../../types/question";
+
+const LETTERS = ["A", "B", "C", "D"];
 
 export default function Create() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [choices, setChoices] = useState<Choice[]>([
     { choiceText: "", correct: false },
     { choiceText: "", correct: false },
@@ -25,16 +26,12 @@ export default function Create() {
 
   const setChoiceText = (index: number, text: string) => {
     const updated = [...choices];
-    updated[index].choiceText = text;
+    updated[index] = { ...updated[index], choiceText: text };
     setChoices(updated);
   };
 
   const setCorrect = (index: number) => {
-    const updated = choices.map((c, i) => ({
-      ...c,
-      correct: i === index,
-    }));
-    setChoices(updated);
+    setChoices(choices.map((c, i) => ({ ...c, correct: i === index })));
   };
 
   const resetForm = () => {
@@ -48,36 +45,17 @@ export default function Create() {
   };
 
   const handleSubmit = async () => {
+    if (!question.trim()) return Alert.alert("Error", "Question is required");
+    if (choices.some((c) => !c.choiceText.trim())) return Alert.alert("Error", "All options are required");
+    if (!choices.some((c) => c.correct)) return Alert.alert("Error", "Select the correct answer");
+
     try {
       setLoading(true);
-
-      if (!question.trim()) {
-        Alert.alert("Error", "Question is required");
-        return;
-      }
-
-      if (choices.some((c) => !c.choiceText.trim())) {
-        Alert.alert("Error", "All options are required");
-        return;
-      }
-
-      if (!choices.some((c) => c.correct)) {
-        Alert.alert("Error", "Select the correct answer");
-        return;
-      }
-
-      const payload: CreateQuestionRequest = {
-        questionText: question,
-        choices,
-      };
-
+      const payload: CreateQuestionRequest = { questionText: question, choices };
       await createQuestion(payload);
-
-      Alert.alert("Success", "Question created successfully");
-
+      Alert.alert("Success", "Question submitted for review!");
       resetForm();
     } catch (error) {
-      console.log("Create question error:", error);
       Alert.alert("Error", "Failed to create question");
     } finally {
       setLoading(false);
@@ -85,133 +63,73 @@ export default function Create() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Question</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.header}>
+        <Text style={styles.pageTitle}>Create question</Text>
+        <Text style={styles.pageSub}>Contribute to the question bank</Text>
+      </View>
 
+      <Text style={styles.label}>Question</Text>
       <TextInput
-        placeholder="Question"
+        placeholder="Write your question here..."
         value={question}
         onChangeText={setQuestion}
         style={styles.input}
+        multiline
       />
 
-      <Text style={styles.section}>Choices</Text>
+      <Text style={styles.label}>Answer options</Text>
 
       {choices.map((choice, index) => (
         <View key={index} style={styles.choiceRow}>
-          <TextInput
-            placeholder={`Option ${index + 1}`}
-            value={choice.choiceText}
-            onChangeText={(text) => setChoiceText(index, text)}
-            style={styles.choiceInput}
-          />
-
           <Pressable
-            style={[
-              styles.radio,
-              choice.correct && styles.radioSelected,
-            ]}
+            style={[styles.letterBadge, choice.correct && styles.letterBadgeCorrect]}
             onPress={() => setCorrect(index)}
           >
-            {choice.correct && <View style={styles.radioDot} />}
+            <Text style={[styles.letterText, choice.correct && styles.letterTextCorrect]}>
+              {LETTERS[index]}
+            </Text>
           </Pressable>
+
+          <TextInput
+            placeholder={`Option ${LETTERS[index]}`}
+            value={choice.choiceText}
+            onChangeText={(text) => setChoiceText(index, text)}
+            style={[styles.choiceInput, choice.correct && styles.choiceInputCorrect]}
+          />
         </View>
       ))}
 
-      <Text style={styles.help}>
-        Tap circle to mark correct answer
-      </Text>
+      <Text style={styles.help}>Tap a letter to mark the correct answer</Text>
 
-      <Pressable
-        style={[
-          styles.button,
-          loading && { opacity: 0.6 },
-        ]}
-        onPress={handleSubmit}
-        disabled={loading}
-      >
+      <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSubmit} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text style={styles.buttonText}>
-            Submit Question
-          </Text>
+          <Text style={styles.buttonText}>Submit question →</Text>
         )}
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#F8FAFC",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 20,
-  },
-  input: {
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 15,
-  },
-  section: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
-  choiceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  choiceInput: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  radio: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#2563EB",
-    marginLeft: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  radioSelected: {
-    borderColor: "#2563EB",
-  },
-  radioDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#2563EB",
-  },
-  help: {
-    marginTop: 10,
-    fontSize: 12,
-    color: "#6B7280",
-  },
-  button: {
-    marginTop: 20,
-    backgroundColor: "#22C55E",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
+  content: { padding: 20, gap: 4 },
+  header: { marginTop: 20, marginBottom: 24 },
+  pageTitle: { fontSize: 22, fontWeight: "700", color: "#111827" },
+  pageSub: { fontSize: 13, color: "#6B7280", marginTop: 2 },
+  label: { fontSize: 12, fontWeight: "600", color: "#6B7280", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8, marginTop: 12 },
+  input: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 14, fontSize: 15, color: "#111827", minHeight: 80, textAlignVertical: "top", marginBottom: 8 },
+  choiceRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  letterBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F3F4F6", borderWidth: 1, borderColor: "#E5E7EB", alignItems: "center", justifyContent: "center" },
+  letterBadgeCorrect: { backgroundColor: "#3B6D11", borderColor: "#3B6D11" },
+  letterText: { fontSize: 13, fontWeight: "600", color: "#6B7280" },
+  letterTextCorrect: { color: "#fff" },
+  choiceInput: { flex: 1, backgroundColor: "#fff", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 8, padding: 12, fontSize: 14, color: "#111827" },
+  choiceInputCorrect: { borderColor: "#3B6D11", backgroundColor: "#EAF3DE" },
+  help: { fontSize: 12, color: "#9CA3AF", marginTop: 4, marginBottom: 20 },
+  button: { backgroundColor: "#111827", borderRadius: 12, padding: 14, alignItems: "center" },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 });
