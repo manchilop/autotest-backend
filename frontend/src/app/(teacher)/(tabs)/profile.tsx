@@ -1,38 +1,25 @@
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useContext } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-} from "react-native";
 import { AuthContext } from "../../../store/AuthContext";
+import { router } from "expo-router";
 
 export default function Profile() {
   const { authState, logout } = useContext(AuthContext);
 
   const handleLogout = async () => {
     await logout();
+    router.replace("/(auth)/login");
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Profile</Text>
 
-      <Text style={styles.label}>
-        Email: {authState.user?.email}
-      </Text>
+      <Text>Email: {authState.user?.email}</Text>
+      <Text>Role: {authState.user?.role}</Text>
 
-      <Text style={styles.label}>
-        Role: {authState.user?.role}
-      </Text>
-
-      <Pressable
-        style={styles.logoutButton}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutText}>
-          Logout
-        </Text>
+      <Pressable style={styles.button} onPress={handleLogout}>
+        <Text style={styles.buttonText}>Logout</Text>
       </Pressable>
     </View>
   );
@@ -45,22 +32,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
     marginBottom: 20,
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  logoutButton: {
-    marginTop: 30,
-    backgroundColor: "#DC2626",
+  button: {
+    marginTop: 20,
+    backgroundColor: "#EF4444",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
   },
-  logoutText: {
+  buttonText: {
     color: "#fff",
     fontWeight: "600",
   },
