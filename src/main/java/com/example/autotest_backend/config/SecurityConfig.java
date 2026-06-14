@@ -31,19 +31,43 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/questions/next").hasRole("STUDENT")
-                        .requestMatchers(HttpMethod.POST, "/api/questions/*/answer").hasRole("STUDENT")
-                        .requestMatchers(HttpMethod.POST, "/api/questions").hasRole("STUDENT")
-                        .requestMatchers(HttpMethod.GET, "/api/user-questions/completed").hasRole("STUDENT")
-                        .requestMatchers("/api/questions/*/approve", "/api/questions/*/reject").hasRole("TEACHER")
-                        .requestMatchers(HttpMethod.GET, "/api/questions").authenticated()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+                response.setStatus(401);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"status\": 401, \"message\": \"Unauthorized\"}");
+            }).accessDeniedHandler((request, response, accessDeniedException) -> {
+                response.setStatus(403);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"status\": 403, \"message\": \"Access denied\"}");
+            }))
+            .authorizeHttpRequests(auth -> auth.requestMatchers("/auth/**")
+                                               .permitAll()
+
+                                               // STUDENT
+                                               .requestMatchers(HttpMethod.GET, "/api/questions/next")
+                                               .hasRole("STUDENT")
+                                               .requestMatchers(HttpMethod.POST, "/api/questions/*/answer")
+                                               .hasRole("STUDENT")
+                                               .requestMatchers(HttpMethod.POST, "/api/questions")
+                                               .hasRole("STUDENT")
+                                               .requestMatchers(HttpMethod.GET, "/api/user-questions/completed")
+                                                .hasRole("STUDENT")
+
+                                               // TEACHER
+                                               .requestMatchers(HttpMethod.GET, "/api/questions")
+                                               .hasRole("TEACHER")
+                                               .requestMatchers(HttpMethod.GET, "/api/questions/{id}")
+                                               .hasRole("TEACHER")
+                                               .requestMatchers(HttpMethod.POST, "/api/questions/*/approve")
+                                               .hasRole("TEACHER")
+                                               .requestMatchers(HttpMethod.POST, "/api/questions/*/reject")
+                                               .hasRole("TEACHER")
+
+                                               .anyRequest()
+                                               .authenticated())
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
