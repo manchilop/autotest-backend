@@ -1,22 +1,31 @@
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState, ReactNode} from "react";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthState, LoginResponse } from "../types/auth";
-import { User } from "../types/user";
 
 interface AuthContextType {
   authState: AuthState;
+  loading: boolean;
   login: (data: LoginResponse) => Promise<void>;
   logout: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType>(null as any);
+export const AuthContext = createContext<AuthContextType>(
+  {} as AuthContextType
+);
 
-export const AuthProvider = ({ children }: any) => {
+interface Props {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: Props) => {
   const [authState, setAuthState] = useState<AuthState>({
     token: null,
-    expiresIn: null,
     user: null,
+    expiresIn: null,
   });
+
+  const [loading, setLoading] = useState(true);
 
   // 🔄 Load session on app start
   useEffect(() => {
@@ -24,16 +33,22 @@ export const AuthProvider = ({ children }: any) => {
   }, []);
 
   const loadStorage = async () => {
-    const token = await AsyncStorage.getItem("token");
-    const user = await AsyncStorage.getItem("user");
-    const expiresIn = await AsyncStorage.getItem("expiresIn");
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const user = await AsyncStorage.getItem("user");
+      const expiresIn = await AsyncStorage.getItem("expiresIn");
 
-    if (token && user && expiresIn) {
-      setAuthState({
-        token,
-        user: JSON.parse(user),
-        expiresIn: Number(expiresIn),
-      });
+      if (token && user && expiresIn) {
+        setAuthState({
+          token,
+          user: JSON.parse(user),
+          expiresIn: Number(expiresIn),
+        });
+      }
+    } catch (err) {
+      console.log("Error loading auth state:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,11 +75,20 @@ export const AuthProvider = ({ children }: any) => {
       expiresIn: null,
     });
 
-    await AsyncStorage.clear();
+    await AsyncStorage.removeItem("token");
+    await AsyncStorage.removeItem("user");
+    await AsyncStorage.removeItem("expiresIn");
   };
 
   return (
-    <AuthContext.Provider value={{ authState, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        authState,
+        loading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

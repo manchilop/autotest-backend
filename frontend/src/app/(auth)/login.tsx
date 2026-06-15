@@ -18,7 +18,7 @@ export default function LoginScreen() {
       setError("");
 
       // 🔌 call backend
-      const response = await loginService(email, password);
+      const response = await loginService({ email, password });
 
       // 💾 save session
       await login(response);
@@ -62,6 +62,10 @@ export default function LoginScreen() {
         title={loading ? "Logging in..." : "Login"}
         onPress={handleLogin}
       />
+
+      <Text style={styles.link} onPress={() => router.replace("/(auth)/register")}>
+        Don't have an account? Register
+      </Text>
     </View>
   );
 }
@@ -88,5 +92,10 @@ const styles = StyleSheet.create({
   error: {
     color: "red",
     textAlign: "center",
+  },
+  link: {
+    textAlign: "center",
+    color: "#2563EB",
+    marginTop: 8,
   },
 });

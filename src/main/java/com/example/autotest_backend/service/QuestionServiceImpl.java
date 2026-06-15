@@ -1,13 +1,16 @@
 package com.example.autotest_backend.service;
 
+import com.example.autotest_backend.model.Choice;
 import com.example.autotest_backend.model.Question;
 import com.example.autotest_backend.model.QuestionStatus;
+import com.example.autotest_backend.model.User;
 import com.example.autotest_backend.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +18,7 @@ import java.util.List;
 public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
+    private final UserQuestionServiceImpl userQuestionServiceImpl;
 
 
     @Override
@@ -32,6 +36,36 @@ public class QuestionServiceImpl implements QuestionService {
     @Transactional(readOnly = true)
     public List<Question> getQuestionsByStatus(QuestionStatus status) {
         return questionRepository.findByStatus(status);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Question getNextQuestion(Long userId) {
+        Optional<Question> approved = questionRepository.findRandomUnansweredApprovedByUser(userId);
+        if (approved.isPresent()) return approved.get();
+
+        Optional<Question> pending = questionRepository.findRandomUnansweredPendingByUser(userId);
+        if (pending.isPresent()) return pending.get();
+
+        return questionRepository.findRandomApproved().orElseThrow(() -> new IllegalStateException("No questions available"));
+    }
+
+    @Override
+    public boolean answerQuestion(Long questionId, Long choiceId, User user) {
+        Question question = getQuestionOrThrow(questionId);
+        
+        boolean correct = question.getChoices().stream()
+                .filter(c -> c.getId().equals(choiceId))
+                .findFirst()
+                .map(Choice::isCorrect)
+                .orElseThrow(() -> new IllegalArgumentException("Choice not found"));
+
+        // Only mark as completed if the user hasn't already answered this question
+        if (!userQuestionServiceImpl.hasUserCompletedQuestion(user, question)) {
+            userQuestionServiceImpl.markAsCompleted(user, question);
+        }
+
+        return correct;
     }
 
     @Override
