@@ -6,7 +6,7 @@ import { getCompletedQuestions } from "../../../services/question.service";
 
 export default function Home() {
   const { authState } = useContext(AuthContext);
-  const name = authState.user?.email?.split("@")[0] || "Student";
+  const name = authState.user?.name || "Student";
   const [answeredCount, setAnsweredCount] = useState<number | null>(null);
 
   useEffect(() => {
