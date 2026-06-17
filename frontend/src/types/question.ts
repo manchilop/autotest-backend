@@ -11,6 +11,7 @@ export interface Question {
 
 export interface CreateQuestionRequest {
   questionText: string;
+  topicId?: number;
   choices: Choice[];
 }
 
@@ -24,6 +25,10 @@ export interface QuestionResponse {
   id: number;
   questionText: string;
   choices: ChoiceResponse[];
+  topicId: number | null;
+  topicName: string | null;
+  subjectId: number | null;
+  subjectName: string | null;
 }
 
 export interface PracticeQuestionResponse {

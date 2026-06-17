@@ -7,30 +7,59 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { Select } from "../../../components/Select";
 import { getNextQuestion, answerQuestion } from "../../../services/question.service";
+import { getMySubjects } from "../../../services/subject.service";
 import { PracticeQuestionResponse } from "../../../types/question";
+import { Subject } from "../../../types/subject";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
+const ALL_SUBJECTS = -1;
 
 export default function PracticeScreen() {
   const [question, setQuestion] = useState<PracticeQuestionResponse | null>(null);
   const [selectedChoice, setSelectedChoice] = useState<number | null>(null);
   const [correct, setCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [noQuestions, setNoQuestions] = useState(false);
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<number>(ALL_SUBJECTS);
 
   useEffect(() => {
-    fetchNext();
+    fetchSubjects();
   }, []);
+
+  useEffect(() => {
+    if (!loadingSubjects) {
+      fetchNext();
+    }
+  }, [selectedSubjectId, loadingSubjects]);
+
+  const fetchSubjects = async () => {
+    try {
+      const data = await getMySubjects();
+      setSubjects(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingSubjects(false);
+    }
+  };
 
   const fetchNext = async () => {
     try {
       setLoading(true);
       setSelectedChoice(null);
       setCorrect(null);
-      const data = await getNextQuestion();
+      setNoQuestions(false);
+      const subjectFilter = selectedSubjectId === ALL_SUBJECTS ? undefined : selectedSubjectId;
+      const data = await getNextQuestion(subjectFilter);
       setQuestion(data);
     } catch (e) {
-      console.error(e);
+      setQuestion(null);
+      setNoQuestions(true);
     } finally {
       setLoading(false);
     }
@@ -47,7 +76,7 @@ export default function PracticeScreen() {
     }
   };
 
-  if (loading) {
+  if (loadingSubjects) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -55,11 +84,11 @@ export default function PracticeScreen() {
     );
   }
 
-  if (!question) {
+  if (subjects.length === 0) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.emptyTitle}>No questions available</Text>
-        <Text style={styles.emptySubtitle}>Check back later</Text>
+        <Text style={styles.emptyTitle}>No subjects yet</Text>
+        <Text style={styles.emptySubtitle}>Join a subject from Home to start practicing</Text>
       </View>
     );
   }
@@ -71,47 +100,70 @@ export default function PracticeScreen() {
         <Text style={styles.pageSubtitle}>Answer and learn at your own pace</Text>
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.questionSection}>
-          <Text style={styles.questionText}>{question.questionText}</Text>
-        </View>
+      <Select
+        title="Filter by subject"
+        value={selectedSubjectId}
+        onChange={(value) => setSelectedSubjectId(value)}
+        options={[
+          { label: "All subjects", value: ALL_SUBJECTS },
+          ...subjects.map((s) => ({ label: s.name, value: s.id })),
+        ]}
+      />
 
-        <View style={styles.choicesSection}>
-          {question.choices.map((choice, index) => (
-            <TouchableOpacity
-              key={choice.id}
-              style={[
-                styles.choice,
-                selectedChoice === choice.id && (correct ? styles.choiceCorrect : styles.choiceIncorrect),
-              ]}
-              onPress={() => handleAnswer(choice.id)}
-              activeOpacity={0.8}
-            >
-              <View style={[
-                styles.letter,
-                selectedChoice === choice.id && (correct ? styles.letterCorrect : styles.letterIncorrect),
-              ]}>
-                <Text style={styles.letterText}>{LETTERS[index]}</Text>
-              </View>
-              <Text style={styles.choiceText}>{choice.choiceText}</Text>
-            </TouchableOpacity>
-          ))}
+      {loading ? (
+        <View style={styles.centeredInline}>
+          <ActivityIndicator size="large" />
         </View>
-      </View>
-
-      {selectedChoice !== null && (
+      ) : noQuestions || !question ? (
+        <View style={styles.centeredInline}>
+          <Text style={styles.emptyTitle}>No questions available</Text>
+          <Text style={styles.emptySubtitle}>Check back later</Text>
+        </View>
+      ) : (
         <>
-          <View style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
-            <Text style={correct ? styles.feedbackIcon : styles.feedbackIconWrong}>
-              {correct ? "✓" : "✕"}
-            </Text>
-            <Text style={[styles.feedbackText, !correct && styles.feedbackTextWrong]}>
-              {correct ? "Correct! Well done 🎉" : "Incorrect, keep trying 💪"}
-            </Text>
+          <View style={styles.card}>
+            <View style={styles.questionSection}>
+              <Text style={styles.questionText}>{question.questionText}</Text>
+            </View>
+
+            <View style={styles.choicesSection}>
+              {question.choices.map((choice, index) => (
+                <TouchableOpacity
+                  key={choice.id}
+                  style={[
+                    styles.choice,
+                    selectedChoice === choice.id && (correct ? styles.choiceCorrect : styles.choiceIncorrect),
+                  ]}
+                  onPress={() => handleAnswer(choice.id)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[
+                    styles.letter,
+                    selectedChoice === choice.id && (correct ? styles.letterCorrect : styles.letterIncorrect),
+                  ]}>
+                    <Text style={styles.letterText}>{LETTERS[index]}</Text>
+                  </View>
+                  <Text style={styles.choiceText}>{choice.choiceText}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-          <TouchableOpacity style={styles.nextButton} onPress={fetchNext}>
-            <Text style={styles.nextButtonText}>Next question →</Text>
-          </TouchableOpacity>
+
+          {selectedChoice !== null && (
+            <>
+              <View style={[styles.feedback, correct ? styles.feedbackCorrect : styles.feedbackWrong]}>
+                <Text style={correct ? styles.feedbackIcon : styles.feedbackIconWrong}>
+                  {correct ? "✓" : "✕"}
+                </Text>
+                <Text style={[styles.feedbackText, !correct && styles.feedbackTextWrong]}>
+                  {correct ? "Correct! Well done 🎉" : "Incorrect, keep trying 💪"}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.nextButton} onPress={fetchNext}>
+                <Text style={styles.nextButtonText}>Next question →</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </>
       )}
     </ScrollView>
@@ -121,7 +173,8 @@ export default function PracticeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   content: { padding: 20, gap: 12 },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
+  centeredInline: { paddingVertical: 60, alignItems: "center" },
   header: { marginTop: 20, marginBottom: 8 },
   pageTitle: { fontSize: 22, fontWeight: "700", color: "#111827" },
   pageSubtitle: { fontSize: 13, color: "#6B7280", marginTop: 2 },
@@ -147,5 +200,5 @@ const styles = StyleSheet.create({
   nextButton: { backgroundColor: "#111827", borderRadius: 12, padding: 14, alignItems: "center" },
   nextButtonText: { color: "#fff", fontSize: 15, fontWeight: "600" },
   emptyTitle: { fontSize: 20, fontWeight: "700", color: "#111827" },
-  emptySubtitle: { fontSize: 14, color: "#6B7280", marginTop: 6 },
+  emptySubtitle: { fontSize: 14, color: "#6B7280", marginTop: 6, textAlign: "center" },
 });

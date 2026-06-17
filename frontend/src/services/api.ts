@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 
 const api = axios.create({
   // Ajuste para que funcione en emuladores de Android y iOS/Web
-  baseURL: Platform.OS === 'android' ? "http://10.0.2.2:8080" : "http://localhost:8080",
+  baseURL: Platform.OS === 'android' ? "http://10.0.2.2:8080" : "http://192.168.1.251:8080",
   headers: {
     "Content-Type": "application/json",
   },

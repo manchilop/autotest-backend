@@ -18,7 +18,8 @@ public interface QuestionService {
 
     Question rejectQuestion(Long questionId);
 
-    Question getNextQuestion(Long userId);
+    // subjectId is optional — null means "any subject the user belongs to"
+    Question getNextQuestion(Long userId, Long subjectId);
 
     boolean answerQuestion(Long questionId, Long choiceId, User user);
 }

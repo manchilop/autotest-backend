@@ -4,7 +4,9 @@ import com.example.autotest_backend.dto.question.*;
 import com.example.autotest_backend.mapper.QuestionMapper;
 import com.example.autotest_backend.model.Question;
 import com.example.autotest_backend.model.QuestionStatus;
+import com.example.autotest_backend.model.Topic;
 import com.example.autotest_backend.model.User;
+import com.example.autotest_backend.repository.TopicRepository;
 import com.example.autotest_backend.service.QuestionService;
 import com.example.autotest_backend.service.UserService;
 import jakarta.validation.Valid;
@@ -24,6 +26,7 @@ public class QuestionController {
     private final QuestionService questionService;
     private final QuestionMapper questionMapper;
     private final UserService userService;
+    private final TopicRepository topicRepository;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -32,24 +35,26 @@ public class QuestionController {
     ) {
         Question question = questionMapper.toEntity(request);
 
-        request.getChoices().forEach(choiceRequest -> {
-            question.addChoice(questionMapper.toEntity(choiceRequest));
-        });
+        // Resolve topic if provided
+        if (request.getTopicId() != null) {
+            Topic topic = topicRepository.findById(request.getTopicId())
+                    .orElseThrow(() -> new IllegalArgumentException("Topic not found"));
+            question.setTopic(topic);
+        }
+
+        request.getChoices().forEach(choiceRequest ->
+                question.addChoice(questionMapper.toEntity(choiceRequest))
+        );
 
         Question saved = questionService.createQuestion(question);
-
         return questionMapper.toResponse(saved);
     }
 
     @GetMapping
     public List<QuestionResponse> getQuestions(@RequestParam(required = false) QuestionStatus status) {
-        List<Question> questions;
-
-        if (status != null) {
-            questions = questionService.getQuestionsByStatus(status);
-        } else {
-            questions = questionService.getAllQuestions();
-        }
+        List<Question> questions = status != null
+                ? questionService.getQuestionsByStatus(status)
+                : questionService.getAllQuestions();
 
         return questions.stream()
                 .map(questionMapper::toResponse)
@@ -57,32 +62,40 @@ public class QuestionController {
     }
 
     @GetMapping("/next")
-    public PracticeQuestionResponse getNextQuestion(Authentication authentication) {
-        User user = userService.getUserByEmail(authentication.getName()).orElseThrow();
-        return questionMapper.toPracticeResponse(questionService.getNextQuestion(user.getId()));
+    public PracticeQuestionResponse getNextQuestion(
+            @RequestParam(required = false) Long subjectId,
+            Authentication authentication
+    ) {
+        User user = getUser(authentication);
+        return questionMapper.toPracticeResponse(questionService.getNextQuestion(user.getId(), subjectId));
     }
 
     @PostMapping("/{id}/answer")
     public AnswerResponse answerQuestion(
             @PathVariable Long id,
-            @RequestBody @Valid
-            AnswerRequest request,
+            @RequestBody @Valid AnswerRequest request,
             Authentication authentication
     ) {
-        User user = userService.getUserByEmail(authentication.getName()).orElseThrow();
+        User user = getUser(authentication);
         boolean correct = questionService.answerQuestion(id, request.getChoiceId(), user);
         return new AnswerResponse(correct);
     }
 
     @PatchMapping("/{id}/approve")
     public QuestionResponse approveQuestion(@PathVariable Long id) {
-        Question question = questionService.approveQuestion(id);
-        return questionMapper.toResponse(question);
+        return questionMapper.toResponse(questionService.approveQuestion(id));
     }
 
     @PatchMapping("/{id}/reject")
     public QuestionResponse rejectQuestion(@PathVariable Long id) {
-        Question question = questionService.rejectQuestion(id);
-        return questionMapper.toResponse(question);
+        return questionMapper.toResponse(questionService.rejectQuestion(id));
+    }
+
+    // ──────────────────────────────────────────────
+    // Helpers
+    // ──────────────────────────────────────────────
+
+    private User getUser(Authentication authentication) {
+        return userService.getUserByEmail(authentication.getName()).orElseThrow();
     }
 }
