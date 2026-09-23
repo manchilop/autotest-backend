@@ -14,4 +14,6 @@ public class CreateQuestionRequest {
     String questionText;
 
     List<CreateChoiceRequest> choices;
+
+    private Long topicId;
 }

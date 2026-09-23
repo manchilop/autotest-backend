@@ -20,7 +20,6 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
     private final UserQuestionServiceImpl userQuestionServiceImpl;
 
-
     @Override
     public Question createQuestion(Question question) {
         return questionRepository.save(question);
@@ -40,27 +39,47 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Question getNextQuestion(Long userId) {
+    public Question getNextQuestion(Long userId, Long subjectId) {
+        if (subjectId != null) {
+            return getNextQuestionForSubject(userId, subjectId);
+        }
+        return getNextQuestionAcrossSubjects(userId);
+    }
+
+    private Question getNextQuestionAcrossSubjects(Long userId) {
         Optional<Question> approved = questionRepository.findRandomUnansweredApprovedByUser(userId);
         if (approved.isPresent()) return approved.get();
 
         Optional<Question> pending = questionRepository.findRandomUnansweredPendingByUser(userId);
         if (pending.isPresent()) return pending.get();
 
-        return questionRepository.findRandomApproved().orElseThrow(() -> new IllegalStateException("No questions available"));
+        return questionRepository.findRandomApprovedForUser(userId)
+                .orElseThrow(() -> new IllegalStateException("No questions available"));
+    }
+
+    private Question getNextQuestionForSubject(Long userId, Long subjectId) {
+        Optional<Question> approved =
+                questionRepository.findRandomUnansweredApprovedByUserAndSubject(userId, subjectId);
+        if (approved.isPresent()) return approved.get();
+
+        Optional<Question> pending =
+                questionRepository.findRandomUnansweredPendingByUserAndSubject(userId, subjectId);
+        if (pending.isPresent()) return pending.get();
+
+        return questionRepository.findRandomApprovedForUserAndSubject(userId, subjectId)
+                .orElseThrow(() -> new IllegalStateException("No questions available"));
     }
 
     @Override
     public boolean answerQuestion(Long questionId, Long choiceId, User user) {
         Question question = getQuestionOrThrow(questionId);
-        
+
         boolean correct = question.getChoices().stream()
                 .filter(c -> c.getId().equals(choiceId))
                 .findFirst()
                 .map(Choice::isCorrect)
                 .orElseThrow(() -> new IllegalArgumentException("Choice not found"));
 
-        // Only mark as completed if the user hasn't already answered this question
         if (!userQuestionServiceImpl.hasUserCompletedQuestion(user, question)) {
             userQuestionServiceImpl.markAsCompleted(user, question);
         }
