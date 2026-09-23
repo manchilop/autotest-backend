@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   View,
   Text,
@@ -37,10 +38,12 @@ export default function Library() {
 
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchQuestions();
-    fetchSubjects();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchQuestions();
+      fetchSubjects();
+    }, [])
+  );
 
   const fetchQuestions = async () => {
     try {

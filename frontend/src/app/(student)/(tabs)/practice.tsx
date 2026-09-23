@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   View,
   Text,
@@ -27,15 +28,19 @@ export default function PracticeScreen() {
   const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number>(ALL_SUBJECTS);
 
-  useEffect(() => {
-    fetchSubjects();
-  }, []);
+  // Refresh the subject list every time the tab gains focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchSubjects();
+    }, [])
+  );
 
-  useEffect(() => {
-    if (!loadingSubjects) {
+  // Load a question on focus and whenever the subject filter changes
+  useFocusEffect(
+    useCallback(() => {
       fetchNext();
-    }
-  }, [selectedSubjectId, loadingSubjects]);
+    }, [selectedSubjectId])
+  );
 
   const fetchSubjects = async () => {
     try {

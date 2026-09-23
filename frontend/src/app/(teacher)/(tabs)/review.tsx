@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   View,
   Text,
@@ -17,9 +18,11 @@ export default function Review() {
   const [questions, setQuestions] = useState<QuestionResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadQuestions();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadQuestions();
+    }, [])
+  );
 
   const loadQuestions = async () => {
     try {

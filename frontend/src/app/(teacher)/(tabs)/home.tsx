@@ -1,6 +1,6 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { getQuestionsByStatus } from "../../../services/question.service";
 import { getMySubjects } from "../../../services/subject.service";
 import { AuthContext } from "../../../store/AuthContext";
@@ -11,9 +11,11 @@ export default function Home() {
   const [approvedCount, setApprovedCount] = useState<number | null>(null);
   const [subjectCount, setSubjectCount] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchCounts();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchCounts();
+    }, [])
+  );
 
   const fetchCounts = async () => {
     try {

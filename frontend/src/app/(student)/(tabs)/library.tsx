@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   View,
   Text,
@@ -55,9 +56,11 @@ export default function Library() {
   const [collapsedSubjects, setCollapsedSubjects] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchCompleted();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchCompleted();
+    }, [])
+  );
 
   const fetchCompleted = async () => {
     try {

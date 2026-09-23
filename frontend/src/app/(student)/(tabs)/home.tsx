@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Modal, TextInput, Alert } from "react-native";
-import { router } from "expo-router";
-import { useContext, useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useContext, useState } from "react";
 import { AuthContext } from "../../../store/AuthContext";
 import { getCompletedQuestions } from "../../../services/question.service";
 import { getMySubjects, joinSubject } from "../../../services/subject.service";
@@ -18,12 +18,14 @@ export default function Home() {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
 
-  useEffect(() => {
-    getCompletedQuestions()
-      .then((data) => setAnsweredCount(data.length))
-      .catch(console.error);
-    fetchSubjects();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getCompletedQuestions()
+        .then((data) => setAnsweredCount(data.length))
+        .catch(console.error);
+      fetchSubjects();
+    }, [])
+  );
 
   const fetchSubjects = async () => {
     try {
